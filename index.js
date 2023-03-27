@@ -16,6 +16,10 @@ const openai = new OpenAIApi(new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 }));
 
+client.on('ready', client => {
+  sendHeartbeat();
+})
+
 client.on("messageCreate", async function (message) {
   // 봇의 메시지는 무시
   if (message.author.bot) return;
@@ -58,3 +62,14 @@ client.on("messageCreate", async function (message) {
 });
 
 client.login(process.env.BOT_TOKEN);
+
+function randomIntFromInterval(min, max) {
+  return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+function sendHeartbeat() {
+  setTimeout(() => {
+    client.channels.get('1089782559958892634').send('💕');
+    sendHeartbeat();
+  }, randomIntFromInterval(5, 25) * 60 * 1000);
+}
