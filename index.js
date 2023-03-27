@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import { Client, GatewayIntentBits } from "discord.js";
-// import { Configuration, OpenAIApi } from "openai";
+import { Configuration, OpenAIApi } from "openai";
 
 dotenv.config();
 
@@ -17,28 +17,33 @@ const openai = new OpenAIApi(new Configuration({
 }));
 
 client.on("messageCreate", async function (message) {
-  // 질문 답변 채널 외에는 사용 불가
-  if (msg.channel.id !== '1044079622528184371') return;
-
+  // 봇의 메시지는 무시
   if (message.author.bot) return;
 
-  try {
-    console.log(message);
+  // 질문 답변 채널 외에는 사용 불가
+  if (message.channel.id === '1044079622528184371'
+    || (message.channel.parentId && message.channel.parentId === '1044079622528184371')) {
 
-    // const response = await openai.createChatCompletion({
-    //   model: "gpt-3.5-turbo",
-    //   messages: [
-    //     { role: "system", content: "You are a helpful assistant who responds succinctly" },
-    //     { role: "user", content: message.content }
-    //   ],
-    // });
+    // 멘션이 포함되었을 경우에만 응답
+    if (message.content.indexOf("@씨앗") === -1 && message.content.indexOf("<@1063710061651832934>") === -1) return;
 
-    // const content = response.data.choices[0].message;
-    // return message.reply(content);
-  } catch (err) {
-    // return message.reply(
-    //   "As an AI robot, I errored out."
-    // );
+    try {
+      const response = await openai.createChatCompletion({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: "You are a helpful assistant who responds succinctly" },
+          { role: "user", content: message.content.replace(/@씨앗/gi, '').replace(/<@1063710061651832934>/gi, '') }
+        ],
+      });
+
+      const content = response.data.choices[0].message;
+      return message.reply(content);
+    } catch (err) {
+      console.error(err);
+      return message.reply(
+        "에러 발생 ;)"
+      );
+    }
   }
 });
 
