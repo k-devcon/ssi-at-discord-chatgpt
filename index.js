@@ -89,7 +89,13 @@ function randomIntFromInterval(min, max) {
 
 function sendHeartbeat() {
   setTimeout(() => {
-    client.channels.get('1089782559958892634').send('💕');
-    sendHeartbeat();
+    client.guilds.fetch('1043347505993224233')
+      .then((guild) => {
+        guild.channels.fetch('1044079622528184371')
+          .then(async (channel) => {
+            channel.send('💕');
+            sendHeartbeat();
+          })
+      })
   }, randomIntFromInterval(5, 25) * 60 * 1000);
 }
