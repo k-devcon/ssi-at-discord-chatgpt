@@ -91,7 +91,7 @@ function sendHeartbeat() {
   setTimeout(() => {
     client.guilds.fetch('1043347505993224233')
       .then((guild) => {
-        guild.channels.fetch('1044079622528184371')
+        guild.channels.fetch('1089782559958892634')
           .then(async (channel) => {
             channel.send('💕');
             sendHeartbeat();
