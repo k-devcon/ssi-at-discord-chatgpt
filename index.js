@@ -28,16 +28,26 @@ client.on("messageCreate", async function (message) {
     if (message.content.indexOf("@씨앗") === -1 && message.content.indexOf("<@1063710061651832934>") === -1) return;
 
     try {
+      const inputContent = message.content.replace(/@씨앗/gi, '').replace(/<@1063710061651832934>/gi, '').trim();
+
       const response = await openai.createChatCompletion({
         model: "gpt-3.5-turbo",
         messages: [
           { role: "system", content: "You are a helpful assistant who responds succinctly" },
-          { role: "user", content: message.content.replace(/@씨앗/gi, '').replace(/<@1063710061651832934>/gi, '') }
+          { role: "user", content: inputContent }
         ],
       });
 
+      const isThread = message.channel.id !== '1044079622528184371';
+
       const content = response.data.choices[0].message;
-      return message.reply(content);
+
+      if (isThread) {
+        return message.reply(content);
+      } else {
+        const thread = await message.startThread({ name: (inputContent.length > 20) ? inputContent.substring(0, 20) + '...' : inputContent });
+        thread.send(content);
+      }
     } catch (err) {
       console.error(err);
       return message.reply(
