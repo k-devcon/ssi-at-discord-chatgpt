@@ -34,21 +34,41 @@ client.on("messageCreate", async function (message) {
     try {
       const inputContent = message.content.replace(/@씨앗/gi, '').replace(/<@1063710061651832934>/gi, '').trim();
 
-      const response = await openai.createChatCompletion({
-        model: "gpt-3.5-turbo",
-        messages: [
-          { role: "system", content: "You are a helpful assistant who responds succinctly" },
-          { role: "user", content: inputContent }
-        ],
-      });
-
       const isThread = message.channel.id !== '1044079622528184371';
-
-      const content = response.data.choices[0].message;
+      const messages = [{ role: "system", content: "You are a helpful assistant who responds succinctly" }];
 
       if (isThread) {
-        return message.reply(content);
+        client.guilds.fetch('1043347505993224233')
+          .then((guild) => {
+            guild.channels.fetch('1044079622528184371')
+              .then(async (channel) => {
+                const messageCollection = await channel.messages.fetch({ limit: 100 })
+                const threadMessages = messageCollection.map(message => {
+                  return {
+                    role: message.author.bot ? 'assistant' : 'user',
+                    content: message.content
+                  };
+                })
+                messages.push(...threadMessages.reverse(), { role: "user", content: inputContent });
+
+                const response = await openai.createChatCompletion({
+                  model: "gpt-3.5-turbo",
+                  messages: messages,
+                });
+                const content = response.data.choices[0].message;
+
+                message.reply(content);
+              })
+          })
       } else {
+        messages.push({ role: "user", content: inputContent });
+
+        const response = await openai.createChatCompletion({
+          model: "gpt-3.5-turbo",
+          messages: messages,
+        });
+        const content = response.data.choices[0].message;
+
         const thread = await message.startThread({ name: (inputContent.length > 20) ? inputContent.substring(0, 20) + '...' : inputContent });
         thread.send(content);
       }
